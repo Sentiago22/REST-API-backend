@@ -1,0 +1,37 @@
+name: Docker Compose CI/CD
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        run: |
+          docker build -t search_app_image .
+
+      - name: Run docker-compose
+        run: |
+          docker compose up -d
+          sleep 5   # đợi backend khởi động
+
+      - name: Test API endpoint with curl
+        run: |
+          echo "Testing API..."
+          curl http://localhost:8080/search/10
+
+      - name: Stop containers
+        if: always()
+        run: |
+          docker compose down
